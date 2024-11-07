@@ -1,0 +1,54 @@
+services:
+  db:
+    container_name: ${DB_CONTAINER_NAME}
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "${MYSQL_PORT}:${MYSQL_PORT}"
+    volumes:
+      - ${MYSQL_VOLUME_PATH}:/var/lib/mysql # 将宿主机目录挂载到容器内部的 MySQL 数据目录
+      # todo-licy 没找到
+      - ${MYSQL_LOGS_PATH}:/var/log/mysql # 将宿主机目录挂载到容器内部的 MySQL log 目录
+
+  backend-dev:
+    container_name: ${BACKEND_CONTAINER_NAME}
+    build: .
+    image: ${BACKEND_IMAGE_NAME}:latest
+    ports:
+      - "${PORT}:${PORT}"
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+      PORT: ${PORT}
+    depends_on:
+      - db
+    volumes:
+      # todo-licy 确认是否正确
+      - ${BACKEND_LOGS_PATH}:/usr/src/app/logs # 挂载日志目录
+    restart: on-failure:5 # 自动重启，失败的话重启 5次 后停止
+
+  backend-prod:
+    container_name: ${BACKEND_CONTAINER_NAME}
+    build: .
+    image: ${BACKEND_IMAGE_NAME}:latest
+    ports:
+      - "${PORT}:${PORT}"
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+      PORT: ${PORT}
+    depends_on:
+      - db
+    volumes:
+      # todo-licy 确认是否正确
+      - ${BACKEND_LOGS_PATH}:/usr/src/app/logs # 挂载日志目录
+    restart: on-failure:5 # 自动重启，失败的话重启 5次 后停止

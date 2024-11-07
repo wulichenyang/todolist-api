@@ -1,0 +1,20 @@
+{
+  "name": "todo-list-backend",
+  "version": "1.0.0",
+  "description": "A backend for todo-list application using Koa",
+  "main": "index.js",
+  "scripts": {
+    "start": "pm2 start ./src/index.js --name todo-list-backend-api -- --env-file=.env.dev",
+    "start:dev": "pm2 start ./src/index.js --name todo-list-backend-api -- --env-file=.env.dev",
+    "start:prod": "pm2 start ./src/index.js --name todo-list-backend-api -- --env-file=.env.prod",
+    "docker-build:dev": "docker-compose --env-file .env.dev up -d --build db backend-dev && docker image prune -f",
+    "docker-build:prod": "docker-compose --env-file .env.prod up -d --build db backend-prod && docker image prune -f",
+    "stop": "docker-compose down"
+  },
+  "dependencies": {
+    "koa": "^2.13.0",
+    "koa-router": "^10.0.0",
+    "mysql2": "^2.2.5",
+    "dotenv": "^10.0.0"
+  }
+}
