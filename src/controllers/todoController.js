@@ -19,7 +19,12 @@ const createTodo = async (ctx) => {
     const connection = await getConnection();
     const query =
       "INSERT INTO todo (user_id, task, completed, category_id) VALUES (?, ?, ?, ?)";
-    await connection.query(query, [user_id, task, completed, category_id]);
+    await connection.query(query, [
+      user_id,
+      task,
+      completed ?? false,
+      category_id,
+    ]);
     ctx.status = 201;
     ctx.body = { message: "Todo created successfully!" };
     await connection.end();
@@ -33,16 +38,42 @@ const updateTodo = async (ctx) => {
   const { id } = ctx.params;
   const { task, completed, category_id } = ctx.request.body;
 
+  if (!task && completed === undefined && !category_id) {
+    ctx.throw(
+      400,
+      "At least one field (completed, task, or category_id) must be provided for update"
+    );
+    return;
+  }
+
   try {
     const connection = await getConnection();
-    const query =
-      "UPDATE todo SET task = ?, completed = ?, category_id = ? WHERE id = ?";
-    const [result] = await connection.query(query, [
-      task,
-      completed,
-      category_id,
-      id,
-    ]);
+
+    // 构建动态更新查询
+    const fields = [];
+    const values = [];
+
+    if (task !== undefined) {
+      fields.push("task = ?");
+      values.push(task);
+    }
+
+    if (completed !== undefined) {
+      fields.push("completed = ?");
+      values.push(completed);
+    }
+
+    if (category_id !== undefined) {
+      fields.push("category_id = ?");
+      values.push(category_id);
+    }
+
+    // 添加 ID 到查询参数
+    values.push(id);
+
+    // 生成查询字符串
+    const query = `UPDATE todo SET ${fields.join(", ")} WHERE id = ?`;
+    const [result] = await connection.query(query, values);
 
     if (result.affectedRows === 0) {
       ctx.throw(404, "Todo not found");
